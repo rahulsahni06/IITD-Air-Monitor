@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#3F51B5</color>
+    <color name="colorPrimaryDark">#303F9F</color>
+    <color name="colorAccent">#FF4081</color>
+    <color name="level_1">#8BC34A</color>
+    <color name="level_2">#FBC02D</color>
+    <color name="level_3">#F57C00</color>
+    <color name="level_4">#C53929</color>
+    <color name="level_5">#880E4F</color>
+    <color name="cardview_background">#EEEEEE</color>
+</resources>
