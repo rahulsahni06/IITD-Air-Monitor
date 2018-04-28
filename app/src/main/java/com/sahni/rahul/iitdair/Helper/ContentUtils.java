@@ -54,6 +54,8 @@ public class ContentUtils {
             String days = dayFormatter.format(new Date(difference));
             return days.equals("1") ? days + " day ago" : days + " days ago";
         }
+//        Date date = new Date();
+//        date.getTime()
     }
 
     public static String epochToMonth(long epoch){

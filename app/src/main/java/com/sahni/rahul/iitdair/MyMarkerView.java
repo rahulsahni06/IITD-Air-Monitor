@@ -33,6 +33,7 @@ public class MyMarkerView extends MarkerView {
     // content (user-interface)
     @Override
     public void refreshContent(Entry e, Highlight highlight) {
+
         long currentTimestamp = (long)e.getX();
         Log.d("Rahul","Marker ="+currentTimestamp);
         Log.d("Rahul","Marker date ="+mDataFormat.format(new Date(currentTimestamp)));

@@ -39,8 +39,10 @@ import com.sahni.rahul.iitdair.Networking.NetworkUtils;
 import com.sahni.rahul.iitdair.Networking.RetrofitClient;
 import com.sahni.rahul.iitdair.Networking.UbiDotsResponse;
 import com.sahni.rahul.iitdair.R;
+import com.sahni.rahul.iitdair.TimerMarkerView;
 import com.sahni.rahul.iitdair.UI.MyGauge;
 
+import java.sql.Time;
 import java.util.ArrayList;
 import java.util.Collections;
 
@@ -99,23 +101,23 @@ public class HomeFragment extends Fragment {
         mGauge = view.findViewById(R.id.my_gauge);
         mLineChart = view.findViewById(R.id.chart);
 
-        MyMarkerView myMarkerView = new MyMarkerView(getActivity(), R.layout.custom_marker_view, referenceTimestamp);
-
+        TimerMarkerView myMarkerView = new TimerMarkerView(getActivity(), R.layout.custom_marker_view, mLineChart);
+        myMarkerView.setOffset(mLineChart.getMeasuredWidth(), mLineChart.getMeasuredHeight());
         final ArrayList<Entry> entryList = new ArrayList<>();
         mDataSet = new LineDataSet(entryList, "Air Quality Index"); // add entries to dataset
         mLineData = new LineData(mDataSet);
         XAxis xAxis = mLineChart.getXAxis();
-        xAxis.setEnabled(false);
+//        xAxis.setEnabled(false);
         xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
 //        mLineChart.setDrawMarkers(true);
-//        mLineChart.setMarker(myMarkerView);
-//        xAxis.setValueFormatter(new HourAxisValueFormatter(referenceTimestamp));
+        mLineChart.setMarker(myMarkerView);
+//        xAxis.setValueFormatter(new DayAxisValueFormatter(referenceTimestamp));
         mLineChart.setData(mLineData);
         fetchData();
 
     }
 
-    public void fetchData(){
+    public void fetchData() {
         mProgressBar.setVisibility(View.VISIBLE);
         mGaugeCardView.setVisibility(View.INVISIBLE);
         mGraphCardView.setVisibility(View.INVISIBLE);
@@ -133,25 +135,28 @@ public class HomeFragment extends Fragment {
                             ArrayList<Result> resultArrayList = ubiDotsResponse.getResultList();
                             mNameTextView.setText("Air Quality Index");
                             Collections.reverse(resultArrayList);
-                            Result latestResult = resultArrayList.get(resultArrayList.size()-1);
+                            Result latestResult = resultArrayList.get(resultArrayList.size() - 1);
                             referenceTimestamp = resultArrayList.get(0).getCreatedAt();
                             mLastUpdatedTextView.append(ContentUtils.epochToLastUpdated(latestResult.getTimestamp()));
-                            Log.d(TAG, "Value ="+latestResult.getValue());
+                            Log.d(TAG, "Value =" + latestResult.getValue());
                             mGauge.updateIndicator(latestResult.getValue());
 
                             int i = 1;
 //                                float
 //                                ArrayList<DataPoint> dataPoints = new ArrayList<>();
+//                            Log.d("Rahul", "Size =" + resultArrayList.size());
                             for (Result result : resultArrayList) {
-//                                    Log.d("Rahul", "temp =" + result.getValue());
+//                                Log.d("Rahul", "temp =" + result.getValue());
+//                                Log.d("Rahul", "temp =" + result.getCreatedAt());
 //
                                 mDataSet.addEntry(new Entry(i*10,
-                                        result.getValue()));
+                                        result.getValue(), result.getCreatedAt()));
                                 i++;
                             }
+                            Log.d("Rahul", "I =" + i);
                             mLineData.notifyDataChanged();
                             mLineChart.notifyDataSetChanged();
-                            mLastUpdatedTextView.invalidate();
+                            mLineChart.invalidate();
 
 
                         } else {
@@ -169,7 +174,7 @@ public class HomeFragment extends Fragment {
                 });
     }
 
-    private void handleError(String message){
+    private void handleError(String message) {
         AlertDialog dialog = new AlertDialog.Builder(getActivity())
                 .setTitle("Error")
                 .setMessage(message)
@@ -195,7 +200,7 @@ public class HomeFragment extends Fragment {
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
-        if(context instanceof ErrorListener){
+        if (context instanceof ErrorListener) {
             mErrorListener = (ErrorListener) context;
         }
     }
