@@ -11,40 +11,41 @@ import android.support.v4.app.Fragment;
 import android.support.v7.widget.CardView;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.SubMenu;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Adapter;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.PopupMenu;
 import android.widget.ProgressBar;
-import android.widget.TextView;
+import android.widget.Spinner;
+import android.widget.Toast;
 
-import com.github.anastr.speedviewlib.Gauge;
 import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.components.XAxis;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
-import com.github.mikephil.charting.formatter.DefaultAxisValueFormatter;
 import com.jjoe64.graphview.series.DataPoint;
 import com.jjoe64.graphview.series.LineGraphSeries;
-import com.sahni.rahul.iitdair.Activity.MainActivity;
 import com.sahni.rahul.iitdair.ErrorListener;
-import com.sahni.rahul.iitdair.Graph.DayAxisValueFormatter;
-import com.sahni.rahul.iitdair.Helper.ContentUtils;
-import com.sahni.rahul.iitdair.HourAxisValueFormatter;
-import com.sahni.rahul.iitdair.Model.Device;
+import com.sahni.rahul.iitdair.Model.DataSource;
 import com.sahni.rahul.iitdair.Model.Result;
-import com.sahni.rahul.iitdair.MyMarkerView;
+import com.sahni.rahul.iitdair.Model.Variable;
 import com.sahni.rahul.iitdair.Networking.ApiInterface;
-import com.sahni.rahul.iitdair.Networking.DataResponse;
 import com.sahni.rahul.iitdair.Networking.NetworkUtils;
 import com.sahni.rahul.iitdair.Networking.RetrofitClient;
-import com.sahni.rahul.iitdair.Networking.UbiDotsResponse;
+import com.sahni.rahul.iitdair.Networking.VariableDataResponse;
+import com.sahni.rahul.iitdair.Networking.VariableListResponse;
 import com.sahni.rahul.iitdair.R;
 import com.sahni.rahul.iitdair.TimerMarkerView;
-import com.sahni.rahul.iitdair.UI.MyGauge;
 
-import java.sql.Time;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -57,19 +58,23 @@ import retrofit2.Response;
 public class HomeFragment extends Fragment {
 
     private static final String TAG = HomeFragment.class.getSimpleName();
-//    private GraphView graphView;
 
     private LineGraphSeries<DataPoint> series;
     private ProgressBar mProgressBar;
-    private TextView mLastUpdatedTextView;
-    private TextView mNameTextView;
-    private MyGauge mGauge;
     private LineChart mLineChart;
     private CardView mGaugeCardView, mGraphCardView;
     private LineDataSet mDataSet;
     private LineData mLineData;
     private ErrorListener mErrorListener;
     private long referenceTimestamp;
+    private ArrayList<Variable> mVariableArrayList;
+    private ArrayList<DataSource> mDataSourceArrayList;
+    private HashMap<DataSource, ArrayList<Variable>> sourceWithVariableMap;
+    private Spinner mSourceSpinner;
+    private Spinner mVariableSpinner;
+    private boolean isFetchingData = false;
+    private ProgressBar mGraphProgressBar;
+    private Toast toast;
 
 
     public HomeFragment() {
@@ -92,28 +97,109 @@ public class HomeFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-//        final SpeedView speedometer = view.findViewById(R.id.speedView);
+        mSourceSpinner = view.findViewById(R.id.source_spinner);
+        mVariableSpinner = view.findViewById(R.id.device_spinner);
+        mVariableArrayList = new ArrayList<>();
+        mDataSourceArrayList = new ArrayList<>();
+        sourceWithVariableMap = new HashMap<>();
+
         mGaugeCardView = view.findViewById(R.id.cardView);
         mGraphCardView = view.findViewById(R.id.cardView2);
         mProgressBar = view.findViewById(R.id.progress_bar);
-        mNameTextView = view.findViewById(R.id.device_name_text_view);
-        mLastUpdatedTextView = view.findViewById(R.id.last_update_text_view);
-        mGauge = view.findViewById(R.id.my_gauge);
         mLineChart = view.findViewById(R.id.chart);
-
-        TimerMarkerView myMarkerView = new TimerMarkerView(getActivity(), R.layout.custom_marker_view, mLineChart);
-        myMarkerView.setOffset(mLineChart.getMeasuredWidth(), mLineChart.getMeasuredHeight());
-        final ArrayList<Entry> entryList = new ArrayList<>();
+        mGraphProgressBar = view.findViewById(R.id.graph_progress_bar);
+        mGraphProgressBar.setVisibility(View.INVISIBLE);
+        mLineChart.setNoDataText("Data not available");
+        ArrayList<Entry> entryList = new ArrayList<>();
         mDataSet = new LineDataSet(entryList, "Air Quality Index"); // add entries to dataset
         mLineData = new LineData(mDataSet);
         XAxis xAxis = mLineChart.getXAxis();
-//        xAxis.setEnabled(false);
         xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
-//        mLineChart.setDrawMarkers(true);
-        mLineChart.setMarker(myMarkerView);
-//        xAxis.setValueFormatter(new DayAxisValueFormatter(referenceTimestamp));
-        mLineChart.setData(mLineData);
-        fetchData();
+        if(!entryList.isEmpty()) {
+            mLineChart.setData(mLineData);
+        }
+//        mLineChart.setData(mLineData);
+//        getDataSource();
+
+
+        final ArrayAdapter variableAdapter = new ArrayAdapter(getActivity(), android.R.layout.simple_spinner_item, mVariableArrayList);
+        variableAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        mVariableSpinner.setAdapter(variableAdapter);
+
+        ArrayAdapter sourceAdapter = new ArrayAdapter(getActivity(), android.R.layout.simple_spinner_item, mDataSourceArrayList);
+        sourceAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        mSourceSpinner.setAdapter(sourceAdapter);
+        mSourceSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                Log.d(TAG, "onItemSelected(): Item selected");
+                DataSource source = mDataSourceArrayList.get(position);
+                mVariableArrayList.clear();
+                mVariableArrayList.addAll(sourceWithVariableMap.get(source));
+                variableAdapter.notifyDataSetChanged();
+//                if(mVariableArrayList.size() > 0){
+//                    mVariableSpinner.setSelection(0, true);
+//                }
+
+//                PopupMenu popupMenu = new PopupMenu(getActivity(), mSourceSpinner);
+//                SubMenu subMenu = popupMenu.getMenu().addSubMenu(0, -1, 0, source.getName());
+//
+//                for(Variable variable : mVariableArrayList) {
+//                    subMenu.add(0, mVariableArrayList.indexOf(variable), Menu.NONE,variable.getName());
+//                }
+//                popupMenu.show();
+//
+//                popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+//                    @Override
+//                    public boolean onMenuItemClick(MenuItem item) {
+//                        int id = item.getSubMenu().getItem().getItemId();
+//                        Variable variable = mVariableArrayList.get(id);
+//                        getVariableData(variable.getId());
+//                        return true;
+//                    }
+//                });
+
+
+                PopupMenu popupMenu = new PopupMenu(getActivity(), mSourceSpinner);
+
+                for(Variable variable : mVariableArrayList) {
+                    popupMenu.getMenu().add(0, mVariableArrayList.indexOf(variable), Menu.NONE,variable.getName());
+                }
+                popupMenu.show();
+
+                popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+                    @Override
+                    public boolean onMenuItemClick(MenuItem item) {
+                        int id = item.getItemId();
+                        Variable variable = mVariableArrayList.get(id);
+                        getVariableData(variable.getId());
+                        return true;
+                    }
+                });
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+                Log.d(TAG, "onNothingSelected");
+            }
+        });
+
+        mVariableSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                Log.d(TAG, "variable spinner, getting data");
+                Variable variable = mVariableArrayList.get(position);
+                getVariableData(variable.getId());
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+            }
+        });
+
+
+
+        getDataSource();
 
     }
 
@@ -123,23 +209,24 @@ public class HomeFragment extends Fragment {
         mGraphCardView.setVisibility(View.INVISIBLE);
         ApiInterface apiInterface = RetrofitClient.getRetrofitClient();
         apiInterface.getUbiDotsResponse(NetworkUtils.TOKEN, 1)
-                .enqueue(new Callback<UbiDotsResponse>() {
+                .enqueue(new Callback<VariableDataResponse>() {
                     @Override
-                    public void onResponse(Call<UbiDotsResponse> call, Response<UbiDotsResponse> response) {
+                    public void onResponse(Call<VariableDataResponse> call, Response<VariableDataResponse> response) {
 
                         if (response.isSuccessful()) {
+                            Log.d(TAG, "graph data fetched");
                             mProgressBar.setVisibility(View.INVISIBLE);
                             mGaugeCardView.setVisibility(View.VISIBLE);
                             mGraphCardView.setVisibility(View.VISIBLE);
-                            UbiDotsResponse ubiDotsResponse = response.body();
-                            ArrayList<Result> resultArrayList = ubiDotsResponse.getResultList();
-                            mNameTextView.setText("Air Quality Index");
+                            VariableDataResponse variableDataResponse = response.body();
+                            ArrayList<Result> resultArrayList = variableDataResponse.getResultList();
+//                            mNameTextView.setText("Air Quality Index");
                             Collections.reverse(resultArrayList);
                             Result latestResult = resultArrayList.get(resultArrayList.size() - 1);
                             referenceTimestamp = resultArrayList.get(0).getCreatedAt();
-                            mLastUpdatedTextView.append(ContentUtils.epochToLastUpdated(latestResult.getTimestamp()));
+//                            mLastUpdatedTextView.append(ContentUtils.epochToLastUpdated(latestResult.getTimestamp()));
                             Log.d(TAG, "Value =" + latestResult.getValue());
-                            mGauge.updateIndicator(latestResult.getValue());
+//                            mGauge.updateIndicator(latestResult.getValue());
 
                             int i = 1;
 //                                float
@@ -149,11 +236,11 @@ public class HomeFragment extends Fragment {
 //                                Log.d("Rahul", "temp =" + result.getValue());
 //                                Log.d("Rahul", "temp =" + result.getCreatedAt());
 //
-                                mDataSet.addEntry(new Entry(i*10,
+                                mDataSet.addEntry(new Entry(i * 10,
                                         result.getValue(), result.getCreatedAt()));
                                 i++;
                             }
-                            Log.d("Rahul", "I =" + i);
+//                            Log.d("Rahul", "I =" + i);
                             mLineData.notifyDataChanged();
                             mLineChart.notifyDataSetChanged();
                             mLineChart.invalidate();
@@ -161,18 +248,136 @@ public class HomeFragment extends Fragment {
 
                         } else {
                             Log.d(TAG, "Response unsuccessfull =" + response.errorBody());
-                            handleError("Some error occured!");
+                            handleError("Some error occurred!");
                         }
                     }
 
                     @Override
-                    public void onFailure(Call<UbiDotsResponse> call, Throwable t) {
+                    public void onFailure(Call<VariableDataResponse> call, Throwable t) {
                         mProgressBar.setVisibility(View.INVISIBLE);
                         Log.d(TAG, "Error =" + t.getMessage());
                         handleError("Please check your internet connection");
                     }
                 });
     }
+
+
+    private void getDataSource() {
+        mProgressBar.setVisibility(View.VISIBLE);
+        mGaugeCardView.setVisibility(View.INVISIBLE);
+        mGraphCardView.setVisibility(View.INVISIBLE);
+        RetrofitClient.getRetrofitClient()
+                .getDataSource(NetworkUtils.TOKEN)
+                .enqueue(new Callback<VariableListResponse>() {
+                    @Override
+                    public void onResponse(Call<VariableListResponse> call, Response<VariableListResponse> response) {
+                        if (response.isSuccessful()) {
+                            Log.d(TAG, "getDataSource(): data source fetched");
+                            mProgressBar.setVisibility(View.INVISIBLE);
+                            mGaugeCardView.setVisibility(View.VISIBLE);
+                            mGraphCardView.setVisibility(View.VISIBLE);
+                            ArrayList<Variable> variableListResponse = response.body().getVariableArrayList();
+                            HashMap<Variable, DataSource> variableMap = new HashMap<>();
+                            for (Variable variable : variableListResponse) {
+                                variableMap.put(variable, variable.getDataSource());
+                            }
+
+                            for (DataSource source : variableMap.values()) {
+                                ArrayList<Variable> variableArrayList = new ArrayList<>();
+                                for (Variable variable : variableListResponse) {
+                                    if (variable.getDataSource().equals(source)) {
+                                        variableArrayList.add(variable);
+                                    }
+                                }
+                                sourceWithVariableMap.put(source, variableArrayList);
+                            }
+                            mDataSourceArrayList.addAll(sourceWithVariableMap.keySet());
+                            ((ArrayAdapter) mSourceSpinner.getAdapter()).notifyDataSetChanged();
+
+                        } else {
+                            mProgressBar.setVisibility(View.INVISIBLE);
+                            handleError("Some error occurred!");
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<VariableListResponse> call, Throwable t) {
+                        mProgressBar.setVisibility(View.INVISIBLE);
+                        handleError("Some error occurred! " + t.getMessage());
+                        Log.d(TAG, "getDataSource(): Error: " + t.getMessage());
+                    }
+                });
+    }
+
+    private void getVariableData(String variableId){
+        if(isFetchingData){
+            showToast("Wait for current data to load");
+            Log.d(TAG, "getVariableData: wait for previous result to finish");
+        } else {
+            isFetchingData = true;
+            Log.d(TAG, "getVariableData(): Getting new data, id =" + variableId);
+            mGraphProgressBar.setVisibility(View.VISIBLE);
+            RetrofitClient.getRetrofitClient()
+                    .getVariableData(variableId, NetworkUtils.TOKEN, 1)
+                    .enqueue(new Callback<VariableDataResponse>() {
+                        @Override
+                        public void onResponse(Call<VariableDataResponse> call, Response<VariableDataResponse> response) {
+                            isFetchingData = false;
+                            if (response.isSuccessful()) {
+                                mProgressBar.setVisibility(View.INVISIBLE);
+                                mGraphProgressBar.setVisibility(View.INVISIBLE);
+                                mGaugeCardView.setVisibility(View.VISIBLE);
+                                mGraphCardView.setVisibility(View.VISIBLE);
+                                VariableDataResponse variableDataResponse = response.body();
+                                ArrayList<Result> resultArrayList = variableDataResponse.getResultList();
+                                if (resultArrayList.size() > 0) {
+                                    Collections.reverse(resultArrayList);
+                                    Result latestResult = resultArrayList.get(resultArrayList.size() - 1);
+                                    referenceTimestamp = resultArrayList.get(0).getCreatedAt();
+                                    Log.d(TAG, "getVariableData(): Value =" + latestResult.getValue());
+                                    mDataSet.clear();
+                                    int i = 1;
+                                    for (Result result : resultArrayList) {
+                                        mDataSet.addEntry(new Entry(i * 10,
+                                                result.getValue(), result.getCreatedAt()));
+                                        i++;
+                                    }
+                                    if (mLineChart.getData() == null) {
+                                        Log.d(TAG, "getVariableData(): mDataSet is null");
+                                        mLineChart.setData(mLineData);
+                                        mLineData.notifyDataChanged();
+                                        mLineChart.notifyDataSetChanged();
+                                        mLineChart.invalidate();
+                                    } else {
+                                        Log.d(TAG, "getVariableData(): Notifying changes");
+                                        mLineData.notifyDataChanged();
+                                        mLineChart.notifyDataSetChanged();
+                                        mLineChart.invalidate();
+                                    }
+                                } else {
+                                    Log.d(TAG, "getVariableData(): No data available");
+                                    mGraphProgressBar.setVisibility(View.INVISIBLE);
+                                    mLineChart.clear();
+                                }
+
+                            } else {
+                                handleError("Some error occurred!");
+                                mGraphProgressBar.setVisibility(View.INVISIBLE);
+                            }
+                        }
+
+                        @Override
+                        public void onFailure(Call<VariableDataResponse> call, Throwable t) {
+                            isFetchingData = false;
+                            mGraphProgressBar.setVisibility(View.INVISIBLE);
+                            handleError("Some error occurred! " + t.getMessage());
+                            Log.d(TAG, "getVariableData(): Error: " + t.getMessage());
+                        }
+                    });
+        }
+    }
+
+
 
     private void handleError(String message) {
         AlertDialog dialog = new AlertDialog.Builder(getActivity())
@@ -203,5 +408,15 @@ public class HomeFragment extends Fragment {
         if (context instanceof ErrorListener) {
             mErrorListener = (ErrorListener) context;
         }
+    }
+
+    private void showToast(String msg){
+        if(toast != null){
+            if(toast.getView().isShown()){
+                toast.cancel();
+            }
+        }
+        toast = Toast.makeText(getActivity(), msg, Toast.LENGTH_SHORT);
+        toast.show();
     }
 }

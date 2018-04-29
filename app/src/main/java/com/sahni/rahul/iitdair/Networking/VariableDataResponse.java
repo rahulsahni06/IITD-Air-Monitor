@@ -5,7 +5,7 @@ import com.sahni.rahul.iitdair.Model.Result;
 
 import java.util.ArrayList;
 
-public class UbiDotsResponse {
+public class VariableDataResponse {
 
     private boolean count;
 
@@ -18,7 +18,7 @@ public class UbiDotsResponse {
     @SerializedName("next")
     private String nextUrl;
 
-    public UbiDotsResponse() {
+    public VariableDataResponse() {
     }
 
     public boolean isCount() {
