@@ -9,6 +9,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Toast;
 
 import com.sahni.rahul.iitdair.ErrorListener;
 import com.sahni.rahul.iitdair.Fragment.HomeFragment;
@@ -60,13 +61,21 @@ public class MainActivity extends AppCompatActivity
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
+        HomeFragment homeFragment = (HomeFragment) getSupportFragmentManager().findFragmentByTag("Home");
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
+        if (id == R.id.action_start) {
+            if(homeFragment != null){
+                Toast.makeText(this, "Started", Toast.LENGTH_SHORT).show();
+                homeFragment.startRealtimeUpdates();
+            }
+        } else if(id == R.id.action_stop){
+            if(homeFragment != null){
+                Toast.makeText(this, "Stopped", Toast.LENGTH_SHORT).show();
+                homeFragment.stopRealtimeUpdates();
+            }
         }
-
-        return super.onOptionsItemSelected(item);
+        return true;
     }
 
     @SuppressWarnings("StatementWithEmptyBody")

@@ -5,6 +5,7 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -86,7 +87,9 @@ public class HomeFragment extends Fragment {
     private MyScale myScale;
     private TextView mAqiTextView;
     private TextView mAqiStatusTextView;
-
+    private Variable currentVariable;
+    private Handler mTaskHandler;
+    private static final int REPEAT_INTERVAL = 10000;
 
 
 
@@ -109,7 +112,7 @@ public class HomeFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-
+        Log.d(TAG, "onViewCreated");
         mSourceSpinner = view.findViewById(R.id.source_spinner);
         mVariableArrayList = new ArrayList<>();
         mDataSourceArrayList = new ArrayList<>();
@@ -151,10 +154,11 @@ public class HomeFragment extends Fragment {
                 mVariableArrayList.addAll(sourceWithVariableMap.get(source));
 
                 if(isFirstTime){
-                    getVariableData(mVariableArrayList.get(0).getId());
+                    currentVariable = mVariableArrayList.get(0);
+//                    getVariableData(currentVariable.getId());
                     isFirstTime = false;
+                    mTaskHandler.post(repetitiveTaskRunnable);
                 } else {
-
                     PopupMenu popupMenu = new PopupMenu(getActivity(), mSourceSpinner);
 
                     for (Variable variable : mVariableArrayList) {
@@ -170,7 +174,9 @@ public class HomeFragment extends Fragment {
                             isMenuItemClicked = true;
                             mLastSelectedSpinnerId = position;
                             Variable variable = mVariableArrayList.get(id);
-                            getVariableData(variable.getId());
+                            currentVariable = variable;
+//                            getVariableData(variable.getId());
+                            startRealtimeUpdates();
                             return true;
                         }
                     });
@@ -192,6 +198,7 @@ public class HomeFragment extends Fragment {
             }
         });
 
+        mTaskHandler = new Handler(getContext().getMainLooper());
         getDataSource();
 
     }
@@ -231,6 +238,7 @@ public class HomeFragment extends Fragment {
 
                         } else {
                             mProgressBar.setVisibility(View.INVISIBLE);
+                            stopRealtimeUpdates();
                             handleError("Some error occurred!");
                         }
                     }
@@ -238,6 +246,7 @@ public class HomeFragment extends Fragment {
                     @Override
                     public void onFailure(Call<VariableListResponse> call, Throwable t) {
                         mProgressBar.setVisibility(View.INVISIBLE);
+                        stopRealtimeUpdates();
                         handleError("Some error occurred! " + t.getMessage());
                         Log.d(TAG, "getDataSource(): Error: " + t.getMessage());
                     }
@@ -289,6 +298,8 @@ public class HomeFragment extends Fragment {
                                     getAqiStatus(0);
                                     mLineChart.clear();
                                 }
+//                                if(mTaskHandler)
+//                                mTaskHandler.postDelayed(repetitiveTaskRunnable, 10000);
 
                             } else {
                                 handleError("Some error occurred!");
@@ -395,5 +406,34 @@ public class HomeFragment extends Fragment {
         }
         toast = Toast.makeText(getActivity(), msg, Toast.LENGTH_SHORT);
         toast.show();
+    }
+
+    Runnable repetitiveTaskRunnable = new Runnable() {
+        @Override
+        public void run() {
+            if(!isFetchingData){
+                Log.d(TAG, "Runnable: repeate: "+currentVariable.getName());
+
+                getVariableData(currentVariable.getId());
+                mTaskHandler.postDelayed(repetitiveTaskRunnable, REPEAT_INTERVAL);
+            }
+        }
+    };
+
+
+    @Override
+    public void onStop() {
+        Log.d(TAG, "onStop");
+        super.onStop();
+        stopRealtimeUpdates();
+    }
+
+    public void startRealtimeUpdates(){
+        mTaskHandler.removeCallbacks(repetitiveTaskRunnable, null);
+        mTaskHandler.post(repetitiveTaskRunnable);
+    }
+
+    public void stopRealtimeUpdates(){
+        mTaskHandler.removeCallbacks(repetitiveTaskRunnable, null);
     }
 }

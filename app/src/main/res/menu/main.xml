@@ -4,6 +4,14 @@
     <item
         android:id="@+id/action_settings"
         android:orderInCategory="100"
-        android:title="@string/action_settings"
-        app:showAsAction="never" />
+        android:title="Realtime Updates">
+        <menu>
+            <item
+                android:id="@+id/action_stop"
+                android:title="Stop" />
+            <item
+                android:id="@+id/action_start"
+                android:title="Start" />
+        </menu>
+    </item>
 </menu>
