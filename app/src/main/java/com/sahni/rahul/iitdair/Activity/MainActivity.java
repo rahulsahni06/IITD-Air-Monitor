@@ -90,7 +90,7 @@ public class MainActivity extends AppCompatActivity
     public void onError() {
         HomeFragment homeFragment = (HomeFragment) getSupportFragmentManager().findFragmentByTag("Home");
         if(homeFragment != null){
-            homeFragment.fetchData();
+            homeFragment.retryFromStart();
         }
     }
 }

@@ -14,7 +14,7 @@
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_height="0dp"
             android:orientation="vertical"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
@@ -33,88 +33,72 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content">
 
-                    <!--<TextView-->
-                    <!--android:id="@+id/device_name_text_view"-->
-                    <!--android:layout_width="0dp"-->
-                    <!--android:layout_height="wrap_content"-->
-                    <!--android:layout_marginEnd="8dp"-->
-                    <!--android:layout_marginStart="8dp"-->
-                    <!--android:text="Air Quality Index"-->
-                    <!--android:textColor="@android:color/black"-->
-                    <!--android:gravity="center"-->
-                    <!--android:textStyle="bold"-->
-                    <!--app:layout_constraintBottom_toTopOf="@+id/last_update_text_view"-->
-                    <!--app:layout_constraintEnd_toStartOf="@+id/guideline"-->
-                    <!--app:layout_constraintStart_toStartOf="parent"-->
-                    <!--app:layout_constraintTop_toTopOf="parent"-->
-                    <!--app:layout_constraintVertical_chainStyle="packed" />-->
-
-                    <!--<com.sahni.rahul.iitdair.UI.MyGauge-->
-                    <!--android:id="@+id/my_gauge"-->
-                    <!--android:layout_width="0dp"-->
-                    <!--android:layout_height="wrap_content"-->
-                    <!--android:layout_marginBottom="8dp"-->
-                    <!--android:layout_marginEnd="8dp"-->
-                    <!--android:layout_marginTop="8dp"-->
-                    <!--app:layout_constraintBottom_toBottomOf="parent"-->
-                    <!--app:layout_constraintEnd_toEndOf="parent"-->
-                    <!--app:layout_constraintStart_toStartOf="@+id/guideline"-->
-                    <!--app:layout_constraintTop_toTopOf="parent" />-->
-
-                    <!--<TextView-->
-                    <!--android:id="@+id/last_update_text_view"-->
-                    <!--android:layout_width="0dp"-->
-                    <!--android:layout_height="wrap_content"-->
-                    <!--android:layout_marginTop="4dp"-->
-                    <!--android:gravity="center_horizontal"-->
-                    <!--android:text="Reported "-->
-                    <!--android:textSize="11sp"-->
-                    <!--app:layout_constraintBottom_toBottomOf="parent"-->
-                    <!--app:layout_constraintEnd_toEndOf="@+id/device_name_text_view"-->
-                    <!--app:layout_constraintStart_toStartOf="@+id/device_name_text_view"-->
-                    <!--app:layout_constraintTop_toBottomOf="@+id/device_name_text_view" />-->
+                    <com.sahni.rahul.iitdair.UI.MyScale
+                        android:id="@+id/my_scale"
+                        android:layout_width="wrap_content"
+                        android:layout_height="100dp"
+                        android:layout_marginBottom="8dp"
+                        android:layout_marginEnd="8dp"
+                        android:layout_marginStart="8dp"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@+id/aqi_status_text_view" />
 
                     <android.support.constraint.Guideline
                         android:id="@+id/guideline"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:orientation="vertical"
-                        app:layout_constraintGuide_percent="0.5" />
+                        app:layout_constraintGuide_percent="0.7" />
 
-                    <Spinner
+                    <com.sahni.rahul.iitdair.UI.MySpinner
                         android:id="@+id/source_spinner"
                         android:layout_width="0dp"
-                        android:layout_height="wrap_content"
+                        android:layout_height="24dp"
                         android:layout_marginEnd="8dp"
-                        android:layout_marginStart="16dp"
-                        android:layout_marginTop="8dp"
-                        app:layout_constraintEnd_toStartOf="@+id/guideline"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toTopOf="parent" />
-
-                    <Spinner
-                        android:id="@+id/device_spinner"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_marginEnd="16dp"
                         android:layout_marginStart="8dp"
-                        android:layout_marginTop="8dp"
-                        android:visibility="gone"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintStart_toStartOf="@+id/guideline"
-                        app:layout_constraintTop_toTopOf="parent" />
+                        android:visibility="visible"
+                        app:layout_constraintBottom_toBottomOf="@+id/textView5"
+                        app:layout_constraintEnd_toStartOf="@+id/guideline"
+                        app:layout_constraintStart_toEndOf="@+id/textView5"
+                        app:layout_constraintTop_toTopOf="@+id/textView5" />
+
 
                     <TextView
-                        android:id="@+id/current_status_text_view"
+                        android:id="@+id/aqi_text_view"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginEnd="8dp"
-                        android:layout_marginStart="8dp"
-                        android:layout_marginTop="16dp"
-                        android:text="TextView"
+                        android:layout_marginTop="8dp"
+                        android:textColor="@android:color/black"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
                         app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toTopOf="parent" />
+
+                    <TextView
+                        android:id="@+id/aqi_status_text_view"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="8dp"
+                        android:layout_marginTop="5dp"
+                        android:textColor="@android:color/black"
+                        android:textSize="11sp"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toBottomOf="@+id/aqi_text_view" />
+
+                    <TextView
+                        android:id="@+id/textView5"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:layout_marginTop="8dp"
+                        android:text="Source:"
+                        android:textColor="@android:color/black"
                         app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toBottomOf="@+id/source_spinner" />
+                        app:layout_constraintTop_toTopOf="parent" />
+
 
                 </android.support.constraint.ConstraintLayout>
             </android.support.v7.widget.CardView>
@@ -151,7 +135,7 @@
                     <!--android:layout_height="match_parent" />-->
                     <com.github.mikephil.charting.charts.LineChart
                         android:id="@+id/chart"
-                        android:layout_width="match_parent"
+                        android:layout_width="0dp"
                         android:layout_height="0dp"
                         android:layout_marginBottom="8dp"
                         android:layout_marginTop="8dp"
@@ -161,8 +145,8 @@
                         app:layout_constraintTop_toBottomOf="@+id/textView2" />
 
                     <ProgressBar
-                        style="?android:progressBarStyleSmall"
                         android:id="@+id/graph_progress_bar"
+                        style="?android:progressBarStyleSmall"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="8dp"
@@ -173,13 +157,6 @@
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toTopOf="@+id/textView2">
-
-                        <!--<ProgressBar-->
-                            <!--android:id="@+id/graph_progress_bar"-->
-                            <!--android:layout_gravity="center_horizontal|center_vertical"-->
-                            <!--android:layout_width="wrap_content"-->
-                            <!--android:layout_height="wrap_content"-->
-                            <!--style="?android:progressBarStyleSmall"/>-->
                     </ProgressBar>
                 </android.support.constraint.ConstraintLayout>
             </android.support.v7.widget.CardView>
