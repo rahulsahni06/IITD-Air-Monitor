@@ -8,6 +8,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.CardView;
@@ -15,17 +16,12 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.MotionEvent;
-import android.view.SubMenu;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Adapter;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.ImageView;
 import android.widget.PopupMenu;
 import android.widget.ProgressBar;
-import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -40,13 +36,11 @@ import com.sahni.rahul.iitdair.ErrorListener;
 import com.sahni.rahul.iitdair.Model.DataSource;
 import com.sahni.rahul.iitdair.Model.Result;
 import com.sahni.rahul.iitdair.Model.Variable;
-import com.sahni.rahul.iitdair.Networking.ApiInterface;
 import com.sahni.rahul.iitdair.Networking.NetworkUtils;
 import com.sahni.rahul.iitdair.Networking.RetrofitClient;
 import com.sahni.rahul.iitdair.Networking.VariableDataResponse;
 import com.sahni.rahul.iitdair.Networking.VariableListResponse;
 import com.sahni.rahul.iitdair.R;
-import com.sahni.rahul.iitdair.TimerMarkerView;
 import com.sahni.rahul.iitdair.UI.MyScale;
 import com.sahni.rahul.iitdair.UI.MySpinner;
 
@@ -197,6 +191,28 @@ public class HomeFragment extends Fragment {
             public void onNothingSelected(AdapterView<?> parent) {
             }
         });
+
+
+        TabLayout tabLayout = view.findViewById(R.id.tab_layout);
+        tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
+            @Override
+            public void onTabSelected(TabLayout.Tab tab) {
+                Log.d(TAG, "onTabSelected(): Position ="+tab.getPosition());
+            }
+
+            @Override
+            public void onTabUnselected(TabLayout.Tab tab) {
+
+            }
+
+            @Override
+            public void onTabReselected(TabLayout.Tab tab) {
+                Log.d(TAG, "onTabReselected(): Position ="+tab.getPosition());
+            }
+        });
+        if(!tabLayout.getTabAt(0).isSelected()){
+            tabLayout.getTabAt(0).select();
+        }
 
         mTaskHandler = new Handler(getContext().getMainLooper());
         getDataSource();
