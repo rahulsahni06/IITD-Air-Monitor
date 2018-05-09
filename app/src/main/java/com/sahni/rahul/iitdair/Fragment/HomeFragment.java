@@ -33,6 +33,7 @@ import com.github.mikephil.charting.data.LineDataSet;
 import com.jjoe64.graphview.series.DataPoint;
 import com.jjoe64.graphview.series.LineGraphSeries;
 import com.sahni.rahul.iitdair.ErrorListener;
+import com.sahni.rahul.iitdair.Helper.ContentUtils;
 import com.sahni.rahul.iitdair.Model.DataSource;
 import com.sahni.rahul.iitdair.Model.Result;
 import com.sahni.rahul.iitdair.Model.Variable;
@@ -84,14 +85,15 @@ public class HomeFragment extends Fragment {
     private Variable mCurrentVariable;
     private Handler mTaskHandler;
     private static final int REPEAT_INTERVAL = 10000;
+    private TabLayout mTabLayout;
 
-    Runnable mRepetitiveTaskRunnable = new Runnable() {
+    private Runnable mRepetitiveTaskRunnable = new Runnable() {
         @Override
         public void run() {
             if(!isFetchingData){
                 Log.d(TAG, "Runnable: repeate: "+ mCurrentVariable.getName());
 
-                getVariableData(mCurrentVariable.getId());
+                getVariableData(mCurrentVariable.getId(), mTabLayout.getSelectedTabPosition());
                 mTaskHandler.postDelayed(this, REPEAT_INTERVAL);
             }
         }
@@ -206,11 +208,12 @@ public class HomeFragment extends Fragment {
         });
 
 
-        TabLayout tabLayout = view.findViewById(R.id.tab_layout);
-        tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
+        mTabLayout = view.findViewById(R.id.tab_layout);
+        mTabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
             @Override
             public void onTabSelected(TabLayout.Tab tab) {
                 Log.d(TAG, "onTabSelected(): Position ="+tab.getPosition());
+                startRealtimeUpdates();
             }
 
             @Override
@@ -223,13 +226,12 @@ public class HomeFragment extends Fragment {
                 Log.d(TAG, "onTabReselected(): Position ="+tab.getPosition());
             }
         });
-        if(!tabLayout.getTabAt(0).isSelected()){
-            tabLayout.getTabAt(0).select();
+        if(!mTabLayout.getTabAt(0).isSelected()){
+            mTabLayout.getTabAt(0).select();
         }
 
         mTaskHandler = new Handler(getContext().getMainLooper());
         getDataSource();
-
     }
 
 
@@ -282,14 +284,32 @@ public class HomeFragment extends Fragment {
                 });
     }
 
-    private void getVariableData(String variableId) {
+    private void getVariableData(String variableId, int tabPosition) {
         if (isFetchingData) {
             showToast("Wait for current data to load");
         } else {
             isFetchingData = true;
             mGraphProgressBar.setVisibility(View.VISIBLE);
+            long endTime;
+            switch (tabPosition){
+                case 0 :
+                    endTime = ContentUtils.getEndTime(ContentUtils.Time.WEEK);
+                    break;
+                case 1 :
+                    endTime = ContentUtils.getEndTime(ContentUtils.Time.MONTH);
+                    break;
+                case 2:
+                    endTime = ContentUtils.getEndTime(ContentUtils.Time.MONTHS_3);
+                    break;
+                case 3:
+                    endTime = ContentUtils.getEndTime(ContentUtils.Time.YEAR);
+                    break;
+                default:
+                    endTime = ContentUtils.getEndTime(ContentUtils.Time.WEEK);
+            }
             RetrofitClient.getRetrofitClient()
-                    .getVariableData(variableId, NetworkUtils.TOKEN, 1)
+                    .getVariableDataInTimeRange(variableId, NetworkUtils.TOKEN, 1,endTime,
+                            System.currentTimeMillis())
                     .enqueue(new Callback<VariableDataResponse>() {
                         @Override
                         public void onResponse(Call<VariableDataResponse> call, Response<VariableDataResponse> response) {
@@ -451,6 +471,8 @@ public class HomeFragment extends Fragment {
     }
 
     public void stopRealtimeUpdates(){
-        mTaskHandler.removeCallbacks(mRepetitiveTaskRunnable, null);
+        if(mTaskHandler != null) {
+            mTaskHandler.removeCallbacks(mRepetitiveTaskRunnable, null);
+        }
     }
 }

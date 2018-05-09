@@ -4,11 +4,16 @@ import android.util.Log;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
 import java.util.TimeZone;
 
 public class ContentUtils {
+
+    public static enum Time {
+        WEEK, MONTH, MONTHS_3, YEAR
+    }
 
     private static SimpleDateFormat minuteFormatter = new SimpleDateFormat("m", Locale.getDefault());
     private static SimpleDateFormat hourFormatter = new SimpleDateFormat("h", Locale.getDefault());
@@ -68,5 +73,23 @@ public class ContentUtils {
 
     public static String epochToDateTime(long epoch){
         return dateWithTimeFormatter.format(new Date(epoch));
+    }
+
+    public static long getEndTime(Time time){
+        Calendar calendar = Calendar.getInstance();
+        switch (time){
+            case WEEK:
+                calendar.add(Calendar.DAY_OF_MONTH, -7);
+                break;
+            case MONTH:
+                calendar.add(Calendar.MONTH, -1);
+                break;
+            case MONTHS_3:
+                calendar.add(Calendar.MONTH, -3);
+                break;
+            case YEAR:
+                calendar.add(Calendar.YEAR, -1);
+        }
+        return calendar.getTimeInMillis();
     }
 }

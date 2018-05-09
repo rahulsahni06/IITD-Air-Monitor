@@ -19,6 +19,15 @@ public interface ApiInterface {
             @Query("page") int page
     );
 
+    @GET("api/v1.6/variables/{id}/values")
+    Call<VariableDataResponse> getVariableDataInTimeRange(
+            @Path("id") String id,
+            @Query("token") String token,
+            @Query("page") int page,
+            @Query("start") long startEpoch,
+            @Query("end") long endEpoch
+    );
+
     @GET("api/v1.6/devices/my-data-source/aqi/values")
     Call<VariableDataResponse> getUbiDotsResponse(
             @Query("token") String token,
