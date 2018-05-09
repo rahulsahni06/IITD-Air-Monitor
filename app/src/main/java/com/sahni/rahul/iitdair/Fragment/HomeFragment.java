@@ -368,6 +368,10 @@ public class HomeFragment extends Fragment {
     }
 
     public void retryFromStart(){
+        if(sourceWithVariableMap != null && !sourceWithVariableMap.isEmpty()){
+            getVariableData(NetworkUtils.TOKEN, mTabLayout.getSelectedTabPosition());
+            return;
+        }
         isFirstTime = true;
         mLastSelectedSpinnerId = NO_SELECTION;
         isMenuItemClicked = false;
