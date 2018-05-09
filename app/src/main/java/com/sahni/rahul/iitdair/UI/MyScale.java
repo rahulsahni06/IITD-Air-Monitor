@@ -21,7 +21,7 @@ public class MyScale extends View {
     private int height;
     private float part;
     private static final int PADDING = 20;
-    private static final int NO_OF_PARTITION = 5;
+    private static final int NO_OF_PARTITION = 6;
     private Paint mScalePaint;
     private Paint mRectPaint;
     private int color[];
@@ -50,11 +50,15 @@ public class MyScale extends View {
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
         float centerY = height/2;
-        for(int i =0; i<NO_OF_PARTITION; i++){
+        canvas.drawLine(50,centerY, part + 50, centerY, getPaint(0));
+        canvas.drawText("0" , 50, centerY + (2 * PADDING), mHeadingPaint);
+//        canvas.drawLine(part+50,centerY, 2*part + 50, centerY, getPaint(1));
+        canvas.drawText("50" , part +50, centerY + (2 * PADDING), mHeadingPaint);
+        for(int i =1; i<NO_OF_PARTITION; i++){
             canvas.drawLine(i*part+50,centerY, (i+1)*part + 50, centerY, getPaint(i));
-            canvas.drawText("" + (i * 100), i * part +50, centerY + (2 * PADDING), mHeadingPaint);
+            canvas.drawText("" + (i * 100), i * part +50+part, centerY + (2 * PADDING), mHeadingPaint);
         }
-        canvas.drawText("500", 5*part+50, centerY + (2 * PADDING), mHeadingPaint);
+//        canvas.drawText("500", 5*part+50, centerY + (2 * PADDING), mHeadingPaint);
         canvas.drawBitmap(mIndicatorBitmap, getIndicatorPosition(mIndicator.getValue()), centerY - mIndicatorHeight, mRectPaint);
     }
 
@@ -88,17 +92,24 @@ public class MyScale extends View {
 
         mIndicator = new Indicator(0);
 
-        color = new int[]{R.color.level_1, R.color.level_2, R.color.level_3, R.color.level_4, R.color.level_5};
+        color = new int[]{R.color.level_0, R.color.level_1, R.color.level_2, R.color.level_3, R.color.level_4, R.color.level_5};
     }
 
     private float getIndicatorPosition(float value){
-        if(value > 500){
-            value = 500;
-        } else if(value < 0){
+        float position;
+        float scale = part / 51f;
+        float offset = 0;
+        if(value > 100){
+            if(value > 500){
+                value = 500;
+            }
+            scale = part/101f;
+            offset = part;
+        }else if(value <= 0){
             value = 0;
         }
-        float scale = part/101f;
-        float position =  scale*value + 50;
+
+        position =  scale*value + 50 + offset;
         return Math.abs(position - mIndicatorBitmap.getWidth()/2);
     }
 

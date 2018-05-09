@@ -387,22 +387,28 @@ public class HomeFragment extends Fragment {
             myScale.updateIndicator(0);
             return;
         }
-        if(value <= 100) {
-            int color = ContextCompat.getColor(getActivity(), R.color.level_1);
+        if(value <= 50){
+            int color = ContextCompat.getColor(getActivity(), R.color.level_0);
             mAqiStatusTextView.setTextColor(color);
             mAqiStatusTextView.setText("Good");
+            mAqiTextView.setTextColor(color);
+            mAqiTextView.setText(""+value);
+        } else if(value <= 100) {
+            int color = ContextCompat.getColor(getActivity(), R.color.level_1);
+            mAqiStatusTextView.setTextColor(color);
+            mAqiStatusTextView.setText("Acceptable");
             mAqiTextView.setTextColor(color);
             mAqiTextView.setText(""+value);
 
         } else if(value <= 200){
             int color = ContextCompat.getColor(getActivity(), R.color.level_2);
             mAqiStatusTextView.setTextColor(color);
-            mAqiStatusTextView.setText("Acceptable");
+            mAqiStatusTextView.setText("Moderate");
             mAqiTextView.setTextColor(color);
         } else if(value <=300){
             int color = ContextCompat.getColor(getActivity(), R.color.level_3);
             mAqiStatusTextView.setTextColor(color);
-            mAqiStatusTextView.setText("Moderate");
+            mAqiStatusTextView.setText("Heavy");
             mAqiTextView.setTextColor(color);
         } else if(value <= 400){
             int color = ContextCompat.getColor(getActivity(), R.color.level_4);
